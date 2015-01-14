@@ -10,7 +10,6 @@ def hello():
 def login():
 	if g.user is not None and g.user.is_authenticated():
 		return make_response("logged in")
-
 	email = request.get('email')
 	password = request.get('password')
 	if any(email) and any(password) :
@@ -25,7 +24,16 @@ def login():
 
 @controller.route("/register", methods = ['POST'])
 def register():
-	pass
+	email = request.get('email')
+	password = request.get('password')
+	username = request.get('username')
+	if not any(email) or not any(password) or not any(username):
+		return abort(400)
+	else:
+		pwd = User.hash_password(password)
+		user = User(email=email, password=pwd, username=username)
+		user.save()
+		make_response("User registered")
 
 @controller.route("/logout")
 @login_required

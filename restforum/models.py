@@ -34,6 +34,7 @@ class Topic(db.Document):
     description = db.StringField(required=True)
     restricted = db.BooleanField(required=True)
     posts = db.ListField(db.EmbeddedDocumentField('Post'))
+    subtopics = db.ListField(db.EmbeddedDocumentField('Topic'))
 
 class Post(db.EmbeddedDocument):
     created_at = db.DateTimeField(default=datetime.datetime.now, required=True)
