@@ -1,4 +1,5 @@
 from restforum import controller
+from restforum.models import *
 from flask import request, abort, make_response, g
 from flask.ext.login import login_user, login_required
 
@@ -10,8 +11,8 @@ def hello():
 def login():
 	if g.user is not None and g.user.is_authenticated():
 		return make_response("logged in")
-	email = request.get('email')
-	password = request.get('password')
+	email = request.json.get('email')
+	password = request.json.get('password')
 	if any(email) and any(password) :
 		user = User.objects(email=email)
 		if user.verify_password(password):
@@ -24,16 +25,30 @@ def login():
 
 @controller.route("/register", methods = ['POST'])
 def register():
-	email = request.get('email')
-	password = request.get('password')
-	username = request.get('username')
+	print 'Starting request for creating a new user...'
+	email = request.json.get('email')
+	password = request.json.get('password')
+	username = request.json.get('username')
 	if not any(email) or not any(password) or not any(username):
+		print 'Missing required data!'
+		print 'Aborting request!'
 		return abort(400)
 	else:
-		pwd = User.hash_password(password)
-		user = User(email=email, password=pwd, username=username)
-		user.save()
-		make_response("User registered")
+		print 'Have required data!'
+		print 'Checking for duplicates...'
+		if User.objects(email=email) is None:
+			print 'No duplicates!'
+			print 'Creating new user...'
+			user = User(email=email, username=username)
+			pwd = user.hash_password(password)
+			user.password = pwd
+			user.save()
+			print 'User created!'
+			return make_response("User registered")
+		else: 
+			print 'Tried to create an allready existing user!'
+			print 'Aborting request!'
+			return abort(400)
 
 @controller.route("/logout")
 @login_required
