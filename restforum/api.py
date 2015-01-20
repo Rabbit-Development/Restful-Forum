@@ -2,10 +2,12 @@ from restforum import controller
 from restforum.models import *
 from flask import request, abort, make_response, g
 from flask.ext.login import login_user, login_required
+import json
 
 @controller.route("/")
 def hello():
-	return "Hello there!"
+	print(make_response("Hello there!"))
+	return make_response("Hello there!")
 
 @controller.route("/login", methods = ['POST'])
 def login():
@@ -35,8 +37,10 @@ def register():
 		return abort(400)
 	else:
 		print('Have required data!')
+		print('email: ' + email)
+		print('password: ' + password)
 		print('Checking for duplicates...')
-		if User.objects(email=email) is None:
+		if User.objects.filter(email=email).first() is None:
 			print('No duplicates!')
 			print('Creating new user...')
 			user = User(email=email, username=username)
