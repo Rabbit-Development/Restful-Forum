@@ -7,7 +7,11 @@ import unittest, json, datetime
 
 class controllerTestCase(unittest.TestCase):
 
-
+	user_info = {
+			'email':'user@test.com',
+			'password':'password1!@',
+			'username':'nick'
+			}
 	
 	def setUp(self):
 		controller.config['MONGODB_SETTINGS'] = {
@@ -23,6 +27,12 @@ class controllerTestCase(unittest.TestCase):
 		db = connect('test_db')
 		db.drop_database('test_db')
 
+	def register(self):
+		return self.controller.post('/register', data=json.dumps(user_info), headers={'content-type':'application/json'})
+
+	def login(self):
+        return self.app.post('/login', data=json.dumps(user_info), headers={'content-type':'application/json'})
+
 	def test_index(self):
 		rv = self.controller.get('/')
 		assert 200 == rv.status_code
@@ -30,31 +40,23 @@ class controllerTestCase(unittest.TestCase):
 
 	def test_user_mng(self):
 		"""API: Testing User Handling"""
-		user_info = {
-			'email':'useasdr@test.com',
-			'password':'password1!@',
-			'username':'nick'
-			}
-
 		# Registering user
 		rv = self.controller.post('/register', data=json.dumps(user_info), headers={'content-type':'application/json'})
 		assert "User registered" in rv.data.decode('utf-8')
 		assert 200 == rv.status_code
 
 	def test_post(self):
+		rv = self.register()
+		assert 200 == rv.status_code
+		rv = self.login()
+		assert 200 == rv.status_code
 
 		post_info = {
-
 			'body' :'Kveldens første test',
 			'title' : 'Kveldens første title',
-			'author' : "Alf Magnus skrev dette"
-
 		}
 
 		d = json.dumps(post_info)
-
-		
-
 		rv = self.controller.post('/post', data=d, headers={'content-type':'application/json'})
 
 		assert "Post finished" in rv.data.decode('utf-8')
