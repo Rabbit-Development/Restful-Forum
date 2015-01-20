@@ -44,7 +44,7 @@ class Post(db.EmbeddedDocument):
     body = db.StringField()
     image_path = db.StringField()
     comments = db.ListField(db.EmbeddedDocumentField('Comment'))
-    author = db.ReferenceField(User)
+    author = db.ReferenceField(User, required=True)
 
     def get_absolute_url(self):
         return url_for('post', kwargs={"slug": self.slug})
