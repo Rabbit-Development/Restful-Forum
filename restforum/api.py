@@ -25,29 +25,29 @@ def login():
 
 @controller.route("/register", methods = ['POST'])
 def register():
-	print 'Starting request for creating a new user...'
+	print('Starting request for creating a new user...')
 	email = request.json.get('email')
 	password = request.json.get('password')
 	username = request.json.get('username')
 	if not any(email) or not any(password) or not any(username):
-		print 'Missing required data!'
-		print 'Aborting request!'
+		print('Missing required data!')
+		print('Aborting request!')
 		return abort(400)
 	else:
-		print 'Have required data!'
-		print 'Checking for duplicates...'
+		print('Have required data!')
+		print('Checking for duplicates...')
 		if User.objects(email=email) is None:
-			print 'No duplicates!'
-			print 'Creating new user...'
+			print('No duplicates!')
+			print('Creating new user...')
 			user = User(email=email, username=username)
 			pwd = user.hash_password(password)
 			user.password = pwd
 			user.save()
-			print 'User created!'
+			print('User created!')
 			return make_response("User registered")
 		else: 
-			print 'Tried to create an allready existing user!'
-			print 'Aborting request!'
+			print('Tried to create an allready existing user!')
+			print('Aborting request!')
 			return abort(400)
 
 @controller.route("/logout")
