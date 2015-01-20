@@ -2,7 +2,7 @@ from restforum import controller
 from restforum.models import *
 from flask import request, abort, make_response, g
 from flask.ext.login import login_user, login_required
-import json
+import json, datetime
 
 
 @controller.route("/")
@@ -76,18 +76,18 @@ def comments():
 
 @controller.route("/post", methods = ['POST'])
 def post():
-	created_at = request.json.get('created_at')
+	created_at = datetime.datetime.now()
 	title = request.json.get('title')
 	body = request.json.get('body')
 	image_path = request.json.get('image_path')
 	comments = request.json.get('comments')
 	author = request.json.get('author')
 
-	if created_at is None or title is None:
+	if author is None or title is None:
 		print('Missing required data!')
 		print('Aborting request!')
 		return abort(400)
-	elif any(created_at) and any(title):
+	elif any(author) and any(title):
 		print('Post accepted')
 		post = Post(created_at=created_at,title = title, body = body, image_path=image_path, comments=comments, author=author)
 		post.save()
