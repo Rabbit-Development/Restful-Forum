@@ -83,11 +83,11 @@ def post():
 	comments = request.json.get('comments')
 	author = request.json.get('author')
 
-	if: created_at is None or title is None 
+	if created_at is None or title is None:
 		print('Missing required data!')
 		print('Aborting request!')
 		return abort(400)
-	else if: any(created_at) and any(title)
+	elif any(created_at) and any(title):
 		print('Post accepted')
 		post = Post(created_at=created_at,title = title, body = body, image_path=image_path, comments=comments, author=author)
 		post.save()
