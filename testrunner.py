@@ -7,11 +7,6 @@ import unittest, json, datetime
 
 class controllerTestCase(unittest.TestCase):
 
-	user_info = {
-			'email':'user@test.com',
-			'password':'password1!@',
-			'username':'nick'
-			}
 	
 	def setUp(self):
 		controller.config['MONGODB_SETTINGS'] = {
@@ -22,16 +17,21 @@ class controllerTestCase(unittest.TestCase):
 		
 		db = MongoEngine(controller)
 		self.controller = controller.test_client()
+		self.user_info = {
+				'email':'user@test.com',
+				'password':'password1!@',
+				'username':'nick'
+				}
 
 	def tearDown(self):
 		db = connect('test_db')
 		db.drop_database('test_db')
 
 	def register(self):
-		return self.controller.post('/register', data=json.dumps(user_info), headers={'content-type':'application/json'})
+		return self.controller.post('/register', data=json.dumps(self.user_info), headers={'content-type':'application/json'})
 
 	def login(self):
-        return self.app.post('/login', data=json.dumps(user_info), headers={'content-type':'application/json'})
+		return self.controller.post('/login', data=json.dumps(self.user_info), headers={'content-type':'application/json'})
 
 	def test_index(self):
 		rv = self.controller.get('/')
@@ -41,7 +41,7 @@ class controllerTestCase(unittest.TestCase):
 	def test_user_mng(self):
 		"""API: Testing User Handling"""
 		# Registering user
-		rv = self.controller.post('/register', data=json.dumps(user_info), headers={'content-type':'application/json'})
+		rv = self.controller.post('/register', data=json.dumps(self.user_info), headers={'content-type':'application/json'})
 		assert "User registered" in rv.data.decode('utf-8')
 		assert 200 == rv.status_code
 

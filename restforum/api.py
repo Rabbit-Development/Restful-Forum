@@ -12,12 +12,10 @@ def hello():
 
 @controller.route("/login", methods = ['POST'])
 def login():
-	if g.user is not None and g.user.is_authenticated():
-		return make_response("logged in")
 	email = request.json.get('email')
 	password = request.json.get('password')
 	if any(email) and any(password) :
-		user = User.objects(email=email)
+		user = User.objects.filter(email=email).first()
 		if user.verify_password(password):
 			login_user(user)
 			return make_response("logged in")
@@ -74,6 +72,7 @@ def comments():
 
 	pass
 
+@login_required
 @controller.route("/post", methods = ['POST'])
 def post():
 	created_at = datetime.datetime.now()
@@ -81,7 +80,7 @@ def post():
 	body = request.json.get('body')
 	image_path = request.json.get('image_path')
 	comments = request.json.get('comments')
-	author = request.json.get('author')
+	author = g.user.get_id()
 
 	if author is None or title is None:
 		print('Missing required data!')
