@@ -1,4 +1,4 @@
-from restforum import controller
+from restforum import controller, login_manager as lm
 from restforum.models import *
 from flask import request, abort, make_response, g
 from flask.ext.login import login_user, login_required
@@ -14,14 +14,29 @@ def hello():
 def login():
 	email = request.json.get('email')
 	password = request.json.get('password')
-	if any(email) and any(password) :
+	if any(email) and any(password):
+		print('Have required data!')
+		print('email:' + email)
+		print('password' + password)
+		print('Finds user...')
 		user = User.objects.filter(email=email).first()
-		if user.verify_password(password):
-			login_user(user)
-			return make_response("logged in")
-		else :
-			abort(401)
+		if user is not None:
+			print('Found user!')
+			print('Verifies password...')
+			if user.verify_password(password):
+				print('Password verified!')
+				print('Logging in user...')
+				loggedin = login_user(user)
+				print('User logged in!')
+				return make_response("logged in")
+			else :
+				print('Wrong password aborting...')
+				abort(401)
+		else:
+			print('Did not find user...')
+			abort(404)
 	else:
+		print('Missing data...')
 		abort(400)
 
 @controller.route("/register", methods = ['POST'])

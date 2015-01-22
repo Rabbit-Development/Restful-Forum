@@ -49,6 +49,7 @@ class controllerTestCase(unittest.TestCase):
 		rv = self.register()
 		assert 200 == rv.status_code
 		rv = self.login()
+		print(rv.status_code)
 		assert 200 == rv.status_code
 
 		post_info = {

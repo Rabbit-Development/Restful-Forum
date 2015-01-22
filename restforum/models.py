@@ -23,12 +23,10 @@ class User(db.Document):
         except NameError:
             return str(self.id)  # python 3
 
-    @staticmethod
     def verify_password(self, password):
         return pwd_context.verify(password, self.password)
 
-    @staticmethod
-    def hash_password(password):
+    def hash_password(self, password):
         return pwd_context.encrypt(password)
 
 class Topic(db.Document):
