@@ -1,7 +1,7 @@
 from restforum import controller, login_manager as lm
 from restforum.models import *
 from flask import request, abort, make_response, g
-from flask.ext.login import login_user, login_required
+from flask.ext.login import login_user, login_required, current_user
 import json, datetime
 
 
@@ -9,6 +9,10 @@ import json, datetime
 def hello():
 	print(make_response("Hello there!"))
 	return make_response("Hello there!")
+
+@controller.before_request
+def before_request():
+	g.user = current_user
 
 @controller.route("/login", methods = ['POST'])
 def login():
@@ -95,22 +99,24 @@ def post():
 	body = request.json.get('body')
 	image_path = request.json.get('image_path')
 	comments = request.json.get('comments')
+	topic_title = request.json.get('topic_title')
 	author = g.user.get_id()
 
-	if author is None or title is None:
+	if author is None or title is None or topic_title is None:
 		print('Missing required data!')
 		print('Aborting request!')
 		return abort(400)
-	elif any(author) and any(title):
-		print('Post accepted')
-		post = Post(created_at=created_at,title = title, body = body, image_path=image_path, comments=comments, author=author)
-		post.save()
-		print('Post submitted')
-		return make_response('Post finished') 
 	else:
-		print('Something went wrong')
-		print('Aborting request')
-		return abort(400)
+		topic = Topic.objects.filter(title=topic_title).first()
+		if topic is None:
+			print('Topic could not be found!')
+			topic = Topic(title="newTopic", restricted=True)
+		post = Post(created_at=created_at,title = title, body = body, image_path=image_path, comments=comments, author=author)
+		topic.posts.append(post)
+		topic.save()
+		print('Post accepted')
+		print('Post submitted')
+		return make_response('Post finished')
 
 @controller.route("/comment", methods = ['POST'])
 def comment():

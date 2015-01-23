@@ -30,9 +30,9 @@ class User(db.Document):
         return pwd_context.encrypt(password)
 
 class Topic(db.Document):
-    title = db.StringField(max_length=255, required=True)
-    description = db.StringField(required=True)
+    title = db.StringField(max_length=255, required=True, unique=True)
     restricted = db.BooleanField(required=True)
+    description = db.StringField()
     posts = db.ListField(db.EmbeddedDocumentField('Post'))
     subtopics = db.ListField(db.EmbeddedDocumentField('Topic'))
 

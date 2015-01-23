@@ -34,6 +34,7 @@ class controllerTestCase(unittest.TestCase):
 		return self.controller.post('/login', data=json.dumps(self.user_info), headers={'content-type':'application/json'})
 
 	def test_index(self):
+		"""API: Testing index"""
 		rv = self.controller.get('/')
 		assert 200 == rv.status_code
 		assert "Hello there!" in rv.data.decode('utf-8')
@@ -46,15 +47,16 @@ class controllerTestCase(unittest.TestCase):
 		assert 200 == rv.status_code
 
 	def test_post(self):
+		"""API: Testing Posting"""
 		rv = self.register()
 		assert 200 == rv.status_code
 		rv = self.login()
-		print(rv.status_code)
 		assert 200 == rv.status_code
 
 		post_info = {
 			'body' :'Kveldens første test',
 			'title' : 'Kveldens første title',
+			'topic_title' : 'Topic1'
 		}
 
 		d = json.dumps(post_info)
