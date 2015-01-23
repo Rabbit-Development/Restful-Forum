@@ -33,20 +33,21 @@ class controllerTestCase(unittest.TestCase):
 	def login(self):
 		return self.controller.post('/login', data=json.dumps(self.user_info), headers={'content-type':'application/json'})
 
-	def test_index(self):
-		"""API: Testing index"""
-		rv = self.controller.get('/')
-		assert 200 == rv.status_code
-		assert "Hello there!" in rv.data.decode('utf-8')
 
-	def test_user_mng(self):
+	def test_a_user_mng(self):
 		"""API: Testing User Handling"""
 		# Registering user
 		rv = self.controller.post('/register', data=json.dumps(self.user_info), headers={'content-type':'application/json'})
 		assert "User registered" in rv.data.decode('utf-8')
 		assert 200 == rv.status_code
 
-	def test_post(self):
+	def test_b_index(self):
+		"""API: Testing Index"""
+		rv = self.controller.get('/')
+		assert 200 == rv.status_code
+		assert "Hello there!" in rv.data.decode('utf-8')
+
+	def test_b_post(self):
 		"""API: Testing Posting"""
 		rv = self.register()
 		assert 200 == rv.status_code
@@ -61,12 +62,8 @@ class controllerTestCase(unittest.TestCase):
 
 		d = json.dumps(post_info)
 		rv = self.controller.post('/post', data=d, headers={'content-type':'application/json'})
-
 		assert "Post finished" in rv.data.decode('utf-8')
 		assert 200 == rv.status_code
-
-
-
 
 if __name__ == '__main__':
 	unittest.main()
