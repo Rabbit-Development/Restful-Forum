@@ -33,22 +33,25 @@ class Topic(db.Document):
     title = db.StringField(max_length=255, required=True, unique=True)
     restricted = db.BooleanField(required=True)
     description = db.StringField()
-    posts = db.ListField(db.EmbeddedDocumentField('Post'))
     subtopics = db.ListField(db.EmbeddedDocumentField('Topic'))
 
-class Post(db.EmbeddedDocument):
+class Post(db.Document):
     created_at = db.DateTimeField(default=datetime.datetime.now, required=True)
     title = db.StringField(max_length=255, required=True)
     body = db.StringField()
     image_path = db.StringField()
     comments = db.ListField(db.EmbeddedDocumentField('Comment'))
     author = db.ReferenceField(User, required=True)
+    topic = db.ReferenceField(Topic)
 
     def get_absolute_url(self):
         return url_for('post', kwargs={"slug": self.slug})
 
     def __unicode__(self):
         return self.title
+
+    def get_id(self):
+        return str(self.id)
 
     meta = {
         'allow_inheritance': True

@@ -78,13 +78,19 @@ def logout():
     logout_user()
     return make_response("logged out")
 
-@controller.route("/topics", methods = ['GET'])
+@controller.route("/topic/<topic>", methods = ['GET'])
 def topics():
 	return "topics"
 
-@controller.route("/posts", methods = ['GET'])
-def posts():
-	return "posts"
+@login_required
+@controller.route("/post/<id>", methods = ['GET'])
+def posts(id):
+	if topic or id is None:
+		return abort(400)
+	post = Post.objects.filter(id=id).first()
+	if post is None:
+		abort(404)
+	return make_response(json.dumps(post))
 
 @controller.route("/comments", methods = ['GET'])
 def comments():
@@ -99,24 +105,26 @@ def post():
 	body = request.json.get('body')
 	image_path = request.json.get('image_path')
 	comments = request.json.get('comments')
-	topic_title = request.json.get('topic_title')
+	topic_id = request.json.get('topic')
 	author = g.user.get_id()
 
-	if author is None or title is None or topic_title is None:
+	if author is None or title is None:
 		print('Missing required data!')
 		print('Aborting request!')
 		return abort(400)
-	else:
-		topic = Topic.objects.filter(title=topic_title).first()
-		if topic is None:
-			print('Topic could not be found!')
-			topic = Topic(title="newTopic", restricted=True)
+	if topic_id is None:
 		post = Post(created_at=created_at,title = title, body = body, image_path=image_path, comments=comments, author=author)
-		topic.posts.append(post)
-		topic.save()
-		print('Post accepted')
-		print('Post submitted')
-		return make_response('Post finished')
+		post.save()
+		return make_response(json.dumps({'post-id':post.get_id()}))
+	topic = Topic.objects.filter(id=topic_id).first()
+	if topic is None:
+		print('Topic could not be found!')
+		abort(400)
+	post = Post(created_at=created_at,title = title, body = body, image_path=image_path, comments=comments, author=author, topic=topic)
+	post.save()
+	print('Post accepted')
+	print('Post submitted')
+	return make_response(json.dumps({'topic-id':topic.get_id(), 'post-id':post.id.get_id()}))
 
 @controller.route("/comment", methods = ['POST'])
 def comment():

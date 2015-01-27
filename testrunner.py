@@ -23,6 +23,12 @@ class controllerTestCase(unittest.TestCase):
 				'username':'nick'
 				}
 
+		self.post_info = {
+			'body' :'Kveldens første test',
+			'title' : 'Kveldens første title',
+			'topic_title' : 'Topic1'
+		}
+
 	def tearDown(self):
 		db = connect('test_db')
 		db.drop_database('test_db')
@@ -33,6 +39,8 @@ class controllerTestCase(unittest.TestCase):
 	def login(self):
 		return self.controller.post('/login', data=json.dumps(self.user_info), headers={'content-type':'application/json'})
 
+	def post(self):
+		return self.controller.post('/post', data=json.dumps(self.post_info), headers={'content-type':'application/json'})
 
 	def test_a_user_mng(self):
 		"""API: Testing User Handling"""
@@ -53,17 +61,18 @@ class controllerTestCase(unittest.TestCase):
 		assert 200 == rv.status_code
 		rv = self.login()
 		assert 200 == rv.status_code
-
-		post_info = {
-			'body' :'Kveldens første test',
-			'title' : 'Kveldens første title',
-			'topic_title' : 'Topic1'
-		}
-
-		d = json.dumps(post_info)
+		d = json.dumps(self.post_info)
 		rv = self.controller.post('/post', data=d, headers={'content-type':'application/json'})
-		assert "Post finished" in rv.data.decode('utf-8')
 		assert 200 == rv.status_code
 
-if __name__ == '__main__':
-	unittest.main()
+	def test_b_get_post(self):
+		rv = self.register()
+		assert 200 == rv.status_code
+		rv = self.login()
+		assert 200 == rv.status_code
+		rv = self.post()
+		assert 200 == rv.status_code
+		rv = self.get('post')
+
+	if __name__ == '__main__':
+		unittest.main()
