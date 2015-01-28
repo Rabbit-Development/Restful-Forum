@@ -85,12 +85,12 @@ def topics():
 @login_required
 @controller.route("/post/<id>", methods = ['GET'])
 def posts(id):
-	if topic or id is None:
+	if id is None:
 		return abort(400)
 	post = Post.objects.filter(id=id).first()
 	if post is None:
 		abort(404)
-	return make_response(json.dumps(post))
+	return make_response(json.dumps(post.to_json()))
 
 @controller.route("/comments", methods = ['GET'])
 def comments():
@@ -115,6 +115,7 @@ def post():
 	if topic_id is None:
 		post = Post(created_at=created_at,title = title, body = body, image_path=image_path, comments=comments, author=author)
 		post.save()
+		print(post.get_id())
 		return make_response(json.dumps({'post-id':post.get_id()}))
 	topic = Topic.objects.filter(id=topic_id).first()
 	if topic is None:

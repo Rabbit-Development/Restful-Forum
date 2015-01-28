@@ -42,20 +42,20 @@ class controllerTestCase(unittest.TestCase):
 	def post(self):
 		return self.controller.post('/post', data=json.dumps(self.post_info), headers={'content-type':'application/json'})
 
-	def test_a_user_mng(self):
+	def test_user_mng(self):
 		"""API: Testing User Handling"""
 		# Registering user
 		rv = self.controller.post('/register', data=json.dumps(self.user_info), headers={'content-type':'application/json'})
 		assert "User registered" in rv.data.decode('utf-8')
 		assert 200 == rv.status_code
 
-	def test_b_index(self):
+	def test_index(self):
 		"""API: Testing Index"""
 		rv = self.controller.get('/')
 		assert 200 == rv.status_code
 		assert "Hello there!" in rv.data.decode('utf-8')
 
-	def test_b_post(self):
+	def test_post(self):
 		"""API: Testing Posting"""
 		rv = self.register()
 		assert 200 == rv.status_code
@@ -65,14 +65,18 @@ class controllerTestCase(unittest.TestCase):
 		rv = self.controller.post('/post', data=d, headers={'content-type':'application/json'})
 		assert 200 == rv.status_code
 
-	def test_b_get_post(self):
+	def test_get_post(self):
+		"""API: Testing get post"""
 		rv = self.register()
 		assert 200 == rv.status_code
 		rv = self.login()
 		assert 200 == rv.status_code
 		rv = self.post()
 		assert 200 == rv.status_code
-		rv = self.get('post')
+		post_id = json.loads(rv.data.decode('utf-8')).get('post-id')
+		rv = self.controller.get('/post/' + post_id)
+		print(rv.status_code)
+		assert 200 == rv.status_code
 
 	if __name__ == '__main__':
 		unittest.main()
