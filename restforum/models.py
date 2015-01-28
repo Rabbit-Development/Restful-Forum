@@ -33,10 +33,12 @@ class Topic(db.Document):
     title = db.StringField(max_length=255, required=True, unique=True)
     restricted = db.BooleanField(required=True)
     description = db.StringField()
-    subtopics = db.ListField(db.EmbeddedDocumentField('Topic'))
+
+    def get_id(self):
+        return str(self.id)
 
 class Post(db.Document):
-    created_at = db.DateTimeField(default=datetime.datetime.now, required=True)
+    created_at = db.DateTimeField(default=datetime.datetime.now(), required=True)
     title = db.StringField(max_length=255, required=True)
     body = db.StringField()
     image_path = db.StringField()
@@ -58,7 +60,6 @@ class Post(db.Document):
     }
 
 class Comment(db.EmbeddedDocument):
-    created_at = db.DateTimeField(default=datetime.datetime.now, required=True)
+    created_at = db.DateTimeField(default=datetime.datetime.now(), required=True)
     body = db.StringField(verbose_name="Comment", required=True)
-    comments = db.ListField(db.EmbeddedDocumentField('Comment'))
     author = db.ReferenceField(User)

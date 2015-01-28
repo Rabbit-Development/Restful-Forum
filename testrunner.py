@@ -18,15 +18,20 @@ class controllerTestCase(unittest.TestCase):
 		db = MongoEngine(controller)
 		self.controller = controller.test_client()
 		self.user_info = {
-				'email':'user@test.com',
-				'password':'password1!@',
-				'username':'nick'
-				}
+			'email':'user@test.com',
+			'password':'password1!@',
+			'username':'nick'
+		}
 
 		self.post_info = {
-			'body' :'Kveldens første test',
-			'title' : 'Kveldens første title',
-			'topic_title' : 'Topic1'
+			'body' :'Test Post',
+			'title' : 'Test Post Title'
+		}
+
+		self.topic_info = {
+			'title':'Test Topic',
+			'restricted':False,
+			'description':'Topic Test description'
 		}
 
 	def tearDown(self):
@@ -41,6 +46,16 @@ class controllerTestCase(unittest.TestCase):
 
 	def post(self):
 		return self.controller.post('/post', data=json.dumps(self.post_info), headers={'content-type':'application/json'})
+
+	def get_post(self, rv):
+		return self.controller.get('/post/' + json.loads(rv.data.decode('utf-8')).get('post-id'))
+
+	def comment(self, post_id):
+		d = json.dumps({'post-id':post_id, 'body': 'Test Comment'})
+		return self.controller.post('/comment', data=d, headers={'content-type':'application/json'})
+
+	def create_topic(self):
+		return self.controller.post('/topic', data=json.dumps(self.topic_info), headers={'content-type':'application/json'})
 
 	def test_user_mng(self):
 		"""API: Testing User Handling"""
@@ -66,7 +81,7 @@ class controllerTestCase(unittest.TestCase):
 		assert 200 == rv.status_code
 
 	def test_get_post(self):
-		"""API: Testing get post"""
+		"""API: Testing Get Post"""
 		rv = self.register()
 		assert 200 == rv.status_code
 		rv = self.login()
@@ -75,8 +90,60 @@ class controllerTestCase(unittest.TestCase):
 		assert 200 == rv.status_code
 		post_id = json.loads(rv.data.decode('utf-8')).get('post-id')
 		rv = self.controller.get('/post/' + post_id)
-		print(rv.status_code)
 		assert 200 == rv.status_code
+
+	def test_comment(self):
+		"""API: Testing Comment"""
+		rv = self.register()
+		assert 200 == rv.status_code
+		rv = self.login()
+		assert 200 == rv.status_code
+		rv = self.post()
+		assert 200 == rv.status_code
+		post_id = json.loads(rv.data.decode('utf-8')).get('post-id')
+		d = json.dumps({'post-id':post_id, 'body': 'Test Comment'})
+		rv = self.controller.post('/comment', data=d, headers={'content-type':'application/json'})
+		assert 200 == rv.status_code
+		rv = self.get_post(rv)
+		assert json.loads(rv.data.decode('utf-8')).get('comments') != None
+
+	def test_topic(self):
+		"""API: Testing Creating Topic"""
+		rv = self.register()
+		assert 200 == rv.status_code
+		rv = self.login()
+		assert 200 == rv.status_code
+		d = json.dumps(self.topic_info)
+		rv = self.controller.post('/topic', data=d, headers={'content-type':'application/json'})
+		assert 200 == rv.status_code
+
+	def test_a_get_topics(self):
+		"""API: Getting Topics"""
+		rv = self.register()
+		assert 200 == rv.status_code
+		rv = self.login()
+		assert 200 == rv.status_code
+		rv = self.create_topic()
+		assert 200 == rv.status_code
+		rv = self.controller.get('/topics')
+		assert 200 == rv.status_code
+		assert json.loads(rv.data.decode('utf-8'))[0] != None
+
+	def test_get_posts(self):
+		"""API: Testing Getting Posts Given By Topic ID"""
+		rv = self.register()
+		assert 200 == rv.status_code
+		rv = self.login()
+		assert 200 == rv.status_code
+		rv = self.create_topic()
+		assert 200 == rv.status_code
+		d = json.dumps({'body':'asd', 'title':'asdas', 'topic':json.loads(rv.data.decode('utf-8')).get('topic-id')})
+		rv = self.controller.post('/post', data=d, headers={'content-type':'application/json'})
+		assert 200 == rv.status_code
+		topic_id = json.loads(rv.data.decode('utf-8')).get('topic-id')
+		rv = self.controller.get('/' + topic_id)
+		assert 200 == rv.status_code
+
 
 	if __name__ == '__main__':
 		unittest.main()

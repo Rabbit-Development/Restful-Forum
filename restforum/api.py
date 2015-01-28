@@ -78,27 +78,39 @@ def logout():
     logout_user()
     return make_response("logged out")
 
-@controller.route("/topic/<topic>", methods = ['GET'])
+@controller.route("/topics", methods = ['GET'])
 def topics():
-	return "topics"
+	topics = []
+	for topic in Topic.objects.all():
+		topics.append(topic.to_json())
+	if topic == []:
+		abort(404)
+	return make_response(json.dumps(topics))
 
-@login_required
+@controller.route("/<topic_id>", methods = ['GET'])
+def posts(topic_id):
+	if topic_id is None:
+		abort(400)
+	posts = []
+	topic = Topic.objects.filter(id == topic_id).first()
+	for post in Post.objects.filter(topic == topic.get_id()).all():
+		posts.append(post.to_json())
+	if posts == []:
+		abort(404)
+	return make_response(json.dumps(posts))
+
 @controller.route("/post/<id>", methods = ['GET'])
-def posts(id):
+@login_required
+def get_post(id):
 	if id is None:
 		return abort(400)
 	post = Post.objects.filter(id=id).first()
 	if post is None:
 		abort(404)
-	return make_response(json.dumps(post.to_json()))
+	return make_response(post.to_json())
 
-@controller.route("/comments", methods = ['GET'])
-def comments():
-
-	pass
-
-@login_required
 @controller.route("/post", methods = ['POST'])
+@login_required
 def post():
 	created_at = datetime.datetime.now()
 	title = request.json.get('title')
@@ -115,24 +127,62 @@ def post():
 	if topic_id is None:
 		post = Post(created_at=created_at,title = title, body = body, image_path=image_path, comments=comments, author=author)
 		post.save()
-		print(post.get_id())
 		return make_response(json.dumps({'post-id':post.get_id()}))
 	topic = Topic.objects.filter(id=topic_id).first()
 	if topic is None:
 		print('Topic could not be found!')
-		abort(400)
+		abort(404)
 	post = Post(created_at=created_at,title = title, body = body, image_path=image_path, comments=comments, author=author, topic=topic)
 	post.save()
 	print('Post accepted')
 	print('Post submitted')
-	return make_response(json.dumps({'topic-id':topic.get_id(), 'post-id':post.id.get_id()}))
+	return make_response(json.dumps({'topic-id':topic.get_id(), 'post-id':post.get_id()}))
 
 @controller.route("/comment", methods = ['POST'])
 def comment():
-
-	
-	pass
+	created_at = datetime.datetime.now()
+	post_id = request.json.get('post-id')
+	body = request.json.get('body')
+	author = g.user.get_id()
+	print(author)
+	print(body)
+	print(post_id)
+	if author is None or body is None or post_id is None:
+		print('Missing required data!')
+		print('Aborting request!')
+		return abort(400)
+	post = Post.objects.filter(id=post_id).first()
+	if post is None:
+		print('Post could not be found!')
+		abort(404)
+	post.comments.append(Comment(created_at=created_at, body=body, author=author))
+	post.save()
+	return make_response(json.dumps({'post-id':post.get_id()}))
 
 @controller.route("/topic", methods = ['POST'])
+@login_required
 def topic():
-	pass
+	print('===========================')
+	print('New Create Topic request...')
+	title = request.json.get('title')
+	restricted = request.json.get('restricted')
+	description = request.json.get('description')
+
+	if title is None or restricted is None:
+		print('Missing required data!')
+		print('Aborting request!')
+		abort(400)
+	print('Got all data!')
+	print('Checking for duplicates...')
+	if Topic.objects.filter(title=title).first() is not None:
+		print('Topic allready existing!')
+		print('Aborting request')
+		abort(400)
+	print('No duplicates!')
+	print('Creating Topic...')
+	topic = Topic(title=title, restricted=restricted, description=description)
+	topic.save()
+	print('Topic created!')
+	print('===========================')
+	return make_response(json.dumps({'topic-id':topic.get_id()}))
+
