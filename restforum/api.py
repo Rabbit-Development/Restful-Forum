@@ -1,7 +1,8 @@
 from restforum import controller, login_manager as lm
 from restforum.models import *
 from flask import request, abort, make_response, g
-from flask.ext.login import login_user, login_required, current_user
+from flask.ext.login import login_user, login_required, current_user, logout_user
+from mongoengine.errors import ValidationError
 import json, datetime
 
 
@@ -18,7 +19,7 @@ def before_request():
 def login():
 	email = request.json.get('email')
 	password = request.json.get('password')
-	if any(email) and any(password):
+	if email != None and password != None:
 		print('Have required data!')
 		print('email:' + email)
 		print('password' + password)
@@ -38,7 +39,7 @@ def login():
 				abort(401)
 		else:
 			print('Did not find user...')
-			abort(404)
+			abort(401)
 	else:
 		print('Missing data...')
 		abort(400)
@@ -49,7 +50,7 @@ def register():
 	email = request.json.get('email')
 	password = request.json.get('password')
 	username = request.json.get('username')
-	if not any(email) or not any(password) or not any(username):
+	if email == None or password == None or username == None:
 		print('Missing required data!')
 		print('Aborting request!')
 		return abort(400)
@@ -72,7 +73,7 @@ def register():
 			print('Aborting request!')
 			return abort(400)
 
-@controller.route("/logout")
+@controller.route("/logout", methods=['GET'])
 @login_required
 def logout():
     logout_user()
@@ -104,7 +105,10 @@ def posts(topic_id):
 def get_post(id):
 	if id is None:
 		return abort(400)
-	post = Post.objects.filter(id=id).first()
+	try:
+		post = Post.objects.filter(id=id).first()
+	except ValidationError:
+		abort(400)
 	if post is None:
 		abort(404)
 	return make_response(post.to_json())
@@ -128,7 +132,12 @@ def post():
 		post = Post(created_at=created_at,title = title, body = body, image_path=image_path, comments=comments, author=author)
 		post.save()
 		return make_response(json.dumps({'post-id':post.get_id()}))
-	topic = Topic.objects.filter(id=topic_id).first()
+	try:
+		topic = Topic.objects.filter(id=topic_id).first()
+	except ValidationError:
+		print('Not a valid ObjectId!')
+		print('Aborting request!')
+		abort(400)
 	if topic is None:
 		print('Topic could not be found!')
 		abort(404)
@@ -144,14 +153,16 @@ def comment():
 	post_id = request.json.get('post-id')
 	body = request.json.get('body')
 	author = g.user.get_id()
-	print(author)
-	print(body)
-	print(post_id)
 	if author is None or body is None or post_id is None:
 		print('Missing required data!')
 		print('Aborting request!')
 		return abort(400)
-	post = Post.objects.filter(id=post_id).first()
+	try:
+		post = Post.objects.filter(id=post_id).first()
+	except ValidationError:
+		print('Not a valid ObjectId!')
+		print('Aborting request!')
+		abort(400)
 	if post is None:
 		print('Post could not be found!')
 		abort(404)
